@@ -22,6 +22,7 @@ function load(fetchImplementation, env = fixtureEnv) {
     z: { object: value => value },
     createMcpHandler: () => () => { transportCalls++; return new Response('mock MCP transport'); },
     fetch: fetchImplementation, Response, Request, Headers, URL, env, ICAL,
+    handleCalendarOAuth: () => new Response('Unauthorized', {status:401}),
   });
   vm.runInContext(executable + '\ncreateServer(env);', context);
   return { invoke: () => tool(), worker: context.worker, transportCalls: () => transportCalls };

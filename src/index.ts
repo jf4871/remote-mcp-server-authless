@@ -3,8 +3,9 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { createMcpHandler } from "agents/mcp/server";
 import { z } from "zod";
 import ICAL from "ical.js";
+import { handleCalendarOAuth, type CalendarOAuthEnv } from "./oauth";
 
-interface CalendarEnv {
+interface CalendarEnv extends CalendarOAuthEnv {
   MCP_TOKEN: string;
   PROTON_API_KEY: string;
   PROTON_API_URL: string;
@@ -99,6 +100,7 @@ function createServer(env: CalendarEnv) {
         "start- og sluttidspunkter samt eventuelle steder " +
         "og beskrivelser. Kalenderen er kun til læsning.",
       inputSchema: z.object({}),
+      annotations: { readOnlyHint: true, destructiveHint: false },
     },
     async () => {
       if (!env.PROTON_API_URL?.trim()) {
@@ -183,13 +185,8 @@ export default {
       request.headers.get("Authorization") !==
         `Bearer ${token}`
     ) {
-      return new Response("Unauthorized", {
-        status: 401,
-        headers: {
-          "WWW-Authenticate": "Bearer",
-          "Cache-Control": "no-store",
-        },
-      });
+      return handleCalendarOAuth(request, env, ctx, (req, handlerEnv, handlerCtx) =>
+        createMcpHandler(() => createServer(handlerEnv))(req, handlerEnv, handlerCtx));
     }
 
     const handler = createMcpHandler(

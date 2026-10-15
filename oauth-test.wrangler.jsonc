@@ -1,0 +1,12 @@
+{
+  "name": "calendar-oauth-local-test",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "kv_namespaces": [{"binding":"OAUTH_KV","id":"00000000000000000000000000000001"}],
+  "vars": {
+    "MCP_TOKEN": "SYNTHETIC_OWNER_KEY_FOR_LOCAL_TEST_ONLY_12345",
+    "PROTON_API_KEY": "SYNTHETIC_UPSTREAM_KEY",
+    "PROTON_API_URL": "http://127.0.0.1:8879/feed"
+  }
+}

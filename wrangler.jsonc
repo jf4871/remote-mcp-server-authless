@@ -8,7 +8,14 @@
 	"main": "src/index.ts",
 	"compatibility_date": "2026-07-02",
 	"compatibility_flags": ["nodejs_compat"],
-	"previews": {},
+	"kv_namespaces": [
+		{ "binding": "OAUTH_KV", "id": "07524e9ce4db4de2995067b16c30da1b" }
+	],
+	"previews": {
+		"kv_namespaces": [
+			{ "binding": "OAUTH_KV", "id": "5c578daa8f41487492974bf0f3a7c1a0" }
+		]
+	},
 	"observability": {
 		"enabled": true,
 	},
