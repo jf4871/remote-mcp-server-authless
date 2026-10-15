@@ -16,7 +16,8 @@ function chatgptRedirect(value: unknown): boolean {
     const url = new URL(value);
     return url.protocol === "https:" && url.hostname === "chatgpt.com" && !url.port &&
       !url.username && !url.password && !url.hash &&
-      (url.pathname.startsWith("/connector/oauth/") || url.pathname === "/connector_platform/oauth/callback");
+      (url.pathname.startsWith("/connector/oauth/") || url.pathname === "/connector_platform/oauth/callback" ||
+        url.pathname === "/connector_platform_oauth_redirect");
   } catch {
     return false;
   }
