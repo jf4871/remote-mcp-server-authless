@@ -4,7 +4,7 @@ import http from 'node:http';
 import { createHash, randomBytes } from 'node:crypto';
 const base = 'http://127.0.0.1:8789';
 const key = 'SYNTHETIC_OWNER_KEY_FOR_LOCAL_TEST_ONLY_12345';
-const redirectUri = 'https://chatgpt.com/connector/oauth/local-test';
+const redirectUri = 'https://chatgpt.com/connector_platform_oauth_redirect';
 let count = 0;
 const pass = name => { count++; console.log(`PASS: ${name}`); };
 const feed = http.createServer((req,res) => { res.writeHead(200,{'Content-Type':'text/calendar'}); res.end('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nBEGIN:VEVENT\r\nUID:synthetic\r\nDTSTART:20261015T090000Z\r\nSUMMARY:Synthetic OAuth appointment\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n'); });
@@ -27,6 +27,11 @@ try {
   const rejectedRegistration = await jsonPost(metadata.registration_endpoint,{redirect_uris:['https://attacker.example/callback'],token_endpoint_auth_method:'none'});
   assert.equal(rejectedRegistration.status,400);
   pass('Registration rejects unrelated redirect destinations');
+  for (const rejectedUri of ['https://chatgpt.com/connector_platform_oauth_redirect/extra', 'https://chatgpt.com.attacker.example/connector_platform_oauth_redirect']) {
+    const rejected = await jsonPost(metadata.registration_endpoint,{redirect_uris:[rejectedUri],token_endpoint_auth_method:'none'});
+    assert.equal(rejected.status,400);
+  }
+  pass('ChatGPT shared callback remains restricted to its exact host and path');
   const registration = await jsonPost(metadata.registration_endpoint,{client_name:'<script>untrusted-client</script>',redirect_uris:[redirectUri],token_endpoint_auth_method:'none',grant_types:['authorization_code','refresh_token'],response_types:['code']});
   assert.equal(registration.status,201);
   const client = await registration.json();
