@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 import assert from 'node:assert/strict';
 import { stripTypeScriptTypes } from 'node:module';
+import ICAL from 'ical.js';
 
 const source = fs.readFileSync(new URL('../src/index.ts', import.meta.url), 'utf8');
 const executable = stripTypeScriptTypes(source.replace(/^import .*;\r?\n/gm, ''))
@@ -20,7 +21,7 @@ function load(fetchImplementation, env = fixtureEnv) {
     McpServer: class { registerTool(name, config, handler) { tool = handler; } },
     z: { object: value => value },
     createMcpHandler: () => () => { transportCalls++; return new Response('mock MCP transport'); },
-    fetch: fetchImplementation, Response, Request, Headers, URL, env,
+    fetch: fetchImplementation, Response, Request, Headers, URL, env, ICAL,
   });
   vm.runInContext(executable + '\ncreateServer(env);', context);
   return { invoke: () => tool(), worker: context.worker, transportCalls: () => transportCalls };
@@ -29,7 +30,7 @@ function load(fetchImplementation, env = fixtureEnv) {
 const response = (body, status = 200) => async () => new Response(body, {status});
 const cases = [
   ['JSON success unchanged', response('{"events":[]}'), null],
-  ['ICS detected', response('BEGIN:VCALENDAR\r\nVERSION:2.0\r\nEND:VCALENDAR\r\n'), 'CALENDAR_ICS_FORMAT'],
+  ['Malformed ICS hides feed data', response(`BEGIN:VCALENDAR\r\n${marker}\r\nEND:VCALENDAR\r\n`), 'CALENDAR_ICS_INVALID'],
   ['HTML detected', response('<!DOCTYPE html><html>Login</html>'), 'CALENDAR_HTML_FORMAT'],
   ['HTTP 401 distinguished', response(marker, 401), 'CALENDAR_HTTP_ERROR'],
   ['HTTP 500 distinguished', response(marker, 500), 'CALENDAR_HTTP_ERROR'],
@@ -67,3 +68,4 @@ for (const [name, auth, env, status] of [
 }
 console.log(`${results.length} checks passed; original JSON behavior and access gate preserved.`);
 console.log('Scope: real callback and access gate, mocked MCP transport, synthetic upstream data. No live secrets used.');
+
