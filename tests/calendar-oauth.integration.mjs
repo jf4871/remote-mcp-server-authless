@@ -52,12 +52,19 @@ try {
   assert.ok(!first.html.includes(key));
   assert.match(first.result.headers.get('content-security-policy'),/frame-ancestors 'none'/);
   pass('Consent escapes untrusted client names and hides the owner key');
+  assert.equal(first.result.headers.get('referrer-policy'),'same-origin');
+  pass('Consent policy preserves Origin for same-origin browser form submissions');
   const badKey = await formPost(base+'/authorize',{handle:first.handle,decision:'approve',owner_key:'incorrect'},{Origin:base,Cookie:first.cookie});
   assert.equal(badKey.status,401);
   pass('Wrong owner key cannot approve a calendar grant');
   const badOrigin = await formPost(base+'/authorize',{handle:first.handle,decision:'approve',owner_key:key},{Origin:'https://attacker.example',Cookie:first.cookie});
   assert.equal(badOrigin.status,403);
   pass('Cross-origin approval is refused');
+  for (const headers of [{Cookie:first.cookie},{Origin:'null',Cookie:first.cookie}]) {
+    const response = await formPost(base+'/authorize',{handle:first.handle,decision:'approve',owner_key:key},headers);
+    assert.equal(response.status,403);
+  }
+  pass('Missing and null origins remain rejected');
   const missingCookie = await formPost(base+'/authorize',{handle:first.handle,decision:'approve',owner_key:key},{Origin:base});
   assert.equal(missingCookie.status,400);
   pass('Approval requires the browser-bound consent cookie');
