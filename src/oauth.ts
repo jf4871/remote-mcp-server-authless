@@ -84,7 +84,9 @@ export async function handleCalendarOAuth<E extends CalendarOAuthEnv>(
         const consent = await oauth.beginConsent(authRequest);
         consent.headers.set("Content-Type", "text/html; charset=utf-8");
         consent.headers.set("Cache-Control", "no-store");
-        consent.headers.set("Referrer-Policy", "no-referrer");
+        // HTML form POSTs under no-referrer send Origin: null. Keep the
+        // same-origin check effective without exposing the URL cross-origin.
+        consent.headers.set("Referrer-Policy", "same-origin");
         consent.headers.set("Content-Security-Policy", "default-src 'none'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'");
         return new Response(loginPage(details, consent.handle), { headers: consent.headers });
       }
